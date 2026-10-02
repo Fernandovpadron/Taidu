@@ -29,3 +29,17 @@ database/backups/
 .DS_Store
 Thumbs.db
 "@ | Set-Content .gitignore
+
+---- CHECK ----
+Get-Content .gitignore
+--- START ---
+git init
+
+
+
+git add .
+git status
+git diff --cached --stat
+git config --global user.name "Fernando Villanueva"
+git config --global user.email "villanueva.fernando@outlook.com"
+git commit -m "Initial commit - Taidu Selling Intelligence"
