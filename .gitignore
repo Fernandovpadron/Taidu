@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Entorno virtual
+.venv/
+
+# Variables de entorno / secretos
+.env
+.env.*
+
+# Backups de PostgreSQL
+database/backups/
+
+# Logs
+*.log
+
+# IDE / editores
+.vscode/
+.idea/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

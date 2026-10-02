@@ -1,0 +1,31 @@
+pendientes 
+
+alias en Power Shell
+
+alias para abrir postgress desde la terminal mas rapido 
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres
+
+entrar diario al ambiente
+
+cd C:\DEV\SalesAI
+.\.venv\Scripts\Activate.ps1
+
+
+---generar script diario para backups
+
+pgdump -U postgres -d postgres -F c -f .\database\backups\tsi_backup.dump
+pgdump -U postgres -d postgres --schema-only -f .\database\schema.sql
+
+
+
+
+Y más adelante podríamos agregar:
+
+activar/desactivar usuarios
+cambiar password
+recuperar password
+registrar último acceso
+controlar sesiones
+asociar vendedores a empresas
+permisos por perfil
+métricas por vendedor

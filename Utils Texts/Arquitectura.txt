@@ -1,0 +1,42 @@
+Architecture
+
+Produccion
+
+Vercel
+   │
+   ├── Flask
+   └── PostgreSQL Cloud
+   
+Desarrollo
+
+Windows
+C:\DEV\TSI
+      │
+      ├── Flask
+      └── PostgreSQL local
+	  
+	  
+	  
+                     Taidu
+                       │
+                       ▼
+                 Identificar usuario
+                       │
+                       ▼
+                PostgreSQL / users_t
+                       │
+                       ▼
+                 Obtener perfil
+                       │
+       ┌───────────────┼────────────────┐
+       │                  │                         │
+       ▼                  ▼                        ▼
+   VENDEDOR            DIRECTOR                 ADMINISTRADOR
+       │               COMERCIAL                    │
+       ▼                  ▼                        ▼
+ Preguntar             Preguntar               Pantalla de
+ nombre                empresa                administración
+       │                  │                        │
+       ▼                  ▼                       ▼
+ Flujo vendedor       Flujo comercial          Acciones admin
+¿Cómo debo llamarte?  ¿Cómo se llama tu empresa?   PantallaAdmin

@@ -1,0 +1,68 @@
+Ambiente:
+cd C:\DEV\SalesAI
+.\.venv\Scripts\Activate.ps1
+
+Ejecutar
+cd C:\DEV\SalesAI
+python app.py
+
+http://127.0.0.1:5000
+
+javier.aguilera@taidu.com
+javier.taidu@taidu.com
+
+
+-----------------------------------------------------
+--------------- historico instalacion ---------------
+-----------------------------------------------------
+
+primero VC++
+ postgress
+luego python
+
+mkdir C:\DEV
+cd C:\DEV...
+.\venv\Scripts\Activate.ps1
+
+mkdir C:\DEV\SalesAI\templates\
+mkdir C:\DEV\SalesAI\static
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+py -c "import sys; print(sys.executable)"
+C:\Users\ferna\AppData\Local\Programs\Python\Python314\python.exe
+
+Test-Path "C:\Users\ferna\AppData\Local\Programs\Python\Python314\Scripts"
+True
+
+PS C:\WINDOWS\System32> [Environment]::SetEnvironmentVariable(
+>>     "Path",
+>>     [Environment]::GetEnvironmentVariable("Path", "User") + ";C:\Users\ferna\AppData\Local\Programs\Python\Python314;C:\Users\ferna\AppData\Local\Programs\Python\Python314\Scripts",
+>>     "User"
+>> )
+--------------------------------------------------------
+  Para activar el environment x 1ra vez
+cd C:\DEV\SalesAI
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+
+Para instalar whisper y lo que falte
+python -m pip install --upgrade pip
+python -m pip install faster-whisper
+python -c "from faster_whisper import WhisperModel; print('faster-whisper OK')"
+pip install psycopg[binary] python-dotenv
+python -m pip install flask
+python -c "import flask; print(flask.__version__)"
+python -m pip freeze > requirements.txt
+
+
+
+
+
+
+
+
+
+
+
+
+

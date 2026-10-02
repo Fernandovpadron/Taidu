@@ -1,0 +1,416 @@
+* {
+    box-sizing: border-box;
+}
+
+
+body {
+    margin: 0;
+    padding: 0;
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+
+    background: #f7f7f8;
+
+    color: #222;
+}
+
+
+.app {
+    min-height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* ============================================
+   HEADER
+   ============================================ */
+
+.header {
+
+    height: 64px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 0 28px;
+
+    background: white;
+
+    border-bottom: 1px solid #e5e5e5;
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 10;
+}
+
+
+.logo {
+
+    font-size: 20px;
+
+    font-weight: 700;
+
+    letter-spacing: -0.5px;
+}
+
+
+.status {
+
+    font-size: 13px;
+
+    color: #777;
+}
+
+
+/* ============================================
+   CONVERSACIÓN
+   ============================================ */
+
+.conversation {
+
+    width: 100%;
+
+    max-width: 850px;
+
+    margin: 0 auto;
+
+    padding: 60px 25px 160px;
+}
+
+
+/* ============================================
+   MENSAJE AI
+   ============================================ */
+
+.question {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 14px;
+
+    margin-bottom: 30px;
+}
+
+
+.avatar {
+
+    width: 38px;
+
+    height: 38px;
+
+    min-width: 38px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 12px;
+
+    font-weight: 700;
+}
+
+
+.ai-avatar {
+
+    background: #222;
+
+    color: white;
+}
+
+
+.message {
+
+    max-width: 720px;
+
+    line-height: 1.6;
+}
+
+
+.ai-message {
+
+    padding-top: 2px;
+}
+
+
+.message-label {
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    color: #666;
+
+    margin-bottom: 5px;
+}
+
+
+.message-text {
+
+    font-size: 20px;
+
+    color: #222;
+}
+
+
+/* ============================================
+   MENSAJE USUARIO
+   ============================================ */
+
+.user-message-container {
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    margin-bottom: 30px;
+
+    padding-left: 60px;
+}
+
+
+.user-message {
+
+    background: #e9e9eb;
+
+    padding: 12px 18px;
+
+    border-radius: 18px;
+
+    font-size: 16px;
+
+    line-height: 1.5;
+
+    max-width: 70%;
+
+    white-space: pre-wrap;
+}
+
+
+/* ============================================
+   INPUT
+   ============================================ */
+
+.input-area {
+
+    position: fixed;
+
+    bottom: 0;
+
+    left: 0;
+
+    right: 0;
+
+    background: linear-gradient(
+        to bottom,
+        rgba(247, 247, 248, 0),
+        #f7f7f8 25%
+    );
+
+    padding: 35px 20px 20px;
+}
+
+
+.input-container {
+
+    max-width: 850px;
+
+    margin: 0 auto;
+
+    background: white;
+
+    border: 1px solid #d9d9d9;
+
+    border-radius: 18px;
+
+    min-height: 58px;
+
+    display: flex;
+
+    align-items: flex-end;
+
+    padding: 8px 10px 8px 18px;
+
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+
+textarea {
+
+    flex: 1;
+
+    border: none;
+
+    outline: none;
+
+    resize: none;
+
+    font-family: inherit;
+
+    font-size: 16px;
+
+    line-height: 24px;
+
+    padding: 8px 0;
+
+    max-height: 150px;
+
+    background: transparent;
+}
+
+
+textarea::placeholder {
+
+    color: #999;
+}
+
+
+/* ============================================
+   BOTONES
+   ============================================ */
+
+.icon-button {
+
+    border: none;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    font-size: 21px;
+
+    width: 42px;
+
+    height: 42px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    transition: background 0.2s;
+}
+
+
+.icon-button:hover {
+
+    background: #f0f0f0;
+}
+
+
+.send-button {
+
+    border: none;
+
+    background: #222;
+
+    color: white;
+
+    cursor: pointer;
+
+    width: 42px;
+
+    height: 42px;
+
+    border-radius: 50%;
+
+    font-size: 20px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    transition: transform 0.1s;
+}
+
+
+.send-button:hover {
+
+    transform: scale(1.05);
+}
+
+
+.send-button:active {
+
+    transform: scale(0.95);
+}
+
+
+/* ============================================
+   AYUDA
+   ============================================ */
+
+.hint {
+
+    text-align: center;
+
+    font-size: 12px;
+
+    color: #999;
+
+    margin-top: 8px;
+}
+
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 600px) {
+
+    .header {
+
+        padding: 0 16px;
+    }
+
+
+    .conversation {
+
+        padding: 35px 16px 160px;
+    }
+
+
+    .message-text {
+
+        font-size: 18px;
+    }
+
+
+    .user-message {
+
+        max-width: 85%;
+    }
+
+
+    .input-area {
+
+        padding-left: 10px;
+
+        padding-right: 10px;
+    }
+
+}

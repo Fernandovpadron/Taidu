@@ -1,0 +1,72 @@
+
+Enfoque de desarrollo:
+
+Quiero que trabajemos este proyecto siguiendo un enfoque de desarrollo **modular, limpio y fácil de mantener**.
+
+### Regla principal
+
+Cada nueva funcionalidad que agreguemos debe implementarse preferentemente mediante **funciones, módulos o servicios independientes**, evitando modificar demasiado el archivo principal de la aplicación.
+
+### Principios que debes seguir
+
+1. **Mantener el archivo principal (`app.py`) pequeño y fácil de leer.**
+
+   * `app.py` debe encargarse principalmente de inicializar Flask, registrar rutas y coordinar módulos.
+   * Evita colocar SQL, lógica de negocio, autenticación, procesamiento de IA o lógica compleja directamente en `app.py`.
+
+2. **Separar responsabilidades.**
+
+   * Base de datos → módulo de conexión y acceso a datos.
+   * Usuarios → módulo de usuarios.
+   * Perfiles → módulo de perfiles.
+   * Autenticación → módulo independiente.
+   * Conversación de Sales AI → módulo independiente.
+   * Flujos específicos por perfil → módulos independientes.
+   * Integración con IA → módulo independiente.
+
+3. **Antes de agregar código, analiza dónde debe vivir.**
+   Si una nueva funcionalidad puede implementarse en un módulo existente, reutilízalo.
+   Si representa una responsabilidad nueva, crea un módulo nuevo en lugar de sobrecargar otro archivo.
+
+4. **Evitar duplicación de código.**
+   Cuando una funcionalidad pueda convertirse en una función reutilizable, crea una función en lugar de repetir el código.
+
+5. **No modificar código existente innecesariamente.**
+   Cuando agregues una funcionalidad, realiza los cambios mínimos necesarios en los archivos existentes.
+
+6. **Mantener funciones pequeñas y con una responsabilidad clara.**
+   Una función debe hacer una cosa y hacerla bien.
+
+7. **Separar la lógica de negocio de la interfaz.**
+   Flask debe manejar las peticiones HTTP, mientras que la lógica de negocio debe estar en módulos separados.
+
+8. **Separar SQL del resto de la aplicación.**
+   Las consultas a PostgreSQL deben estar en módulos de acceso a datos o servicios relacionados, no directamente en las rutas de Flask.
+
+9. **Usar nombres claros y descriptivos.**
+   Los nombres de archivos, funciones y variables deben indicar claramente su propósito.
+
+10. **No crear complejidad innecesaria.**
+    Modular no significa crear un archivo para cada pequeña línea de código. Crea módulos cuando exista una responsabilidad lógica clara.
+
+### Antes de escribir código
+
+Cuando te pida una nueva funcionalidad:
+
+1. Explica brevemente dónde debería implementarse.
+2. Indica qué archivos nuevos habría que crear.
+3. Indica qué archivos existentes habría que modificar.
+4. Explica brevemente por qué.
+5. Después proporciona el código.
+
+### Importante
+
+No quiero que simplemente me entregues un `app.py` cada vez más grande.
+
+Quiero que el proyecto evolucione como una aplicación profesional, donde podamos agregar funcionalidades sin romper las existentes y donde sea fácil para mí entender qué hace cada parte del sistema.
+
+Si consideras que mi estructura actual no es adecuada para una nueva funcionalidad, **detente y propón primero una estructura mejor antes de escribir el código**.
+
+Prioriza siempre:
+
+**claridad → modularidad → reutilización → mantenibilidad → simplicidad.**
