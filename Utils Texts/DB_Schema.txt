@@ -1,4 +1,9 @@
-
+profiles_t: identifica el perfil del usuario.
+users_t: almacena los usuarios.
+companies_t: almacena la información de cada empresa.
+questions_t: almacena las preguntas fijas de las secciones A–H.
+answers_t: almacena las respuestas por empresa.
+company_customers_t: almacena el catálogo de clientes de cada empresa.
 
 CREATE TABLE profiles_t (
     id SERIAL PRIMARY KEY,
@@ -22,4 +27,144 @@ CREATE TABLE users_t (
         FOREIGN KEY (profile_id)
         REFERENCES profiles_t(id)
 );
+
+
+ALTER TABLE users_t ADD COLUMN company_id BIGINT REFERENCES companies_t (company_id);
+
+
+-- =====================================================
+-- TAIDU SELLING AI TRAINER
+-- Estructura inicial de configuración comercial
+-- PostgreSQL
+-- =====================================================
+
+-- 1. EMPRESAS QUE UTILIZAN TAIDU
+CREATE TABLE IF NOT EXISTS companies_t (
+    company_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    company_name VARCHAR(200) NOT NULL,
+    industry VARCHAR(150),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+-- 2. CATÁLOGO MAESTRO DE PREGUNTAS
+-- Son las preguntas fijas que Taidu presenta
+-- al Director Comercial.
+CREATE TABLE IF NOT EXISTS questions_t (
+    question_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    section_code VARCHAR(10) NOT NULL,
+    section_name VARCHAR(150) NOT NULL,
+    question_text TEXT NOT NULL,
+    answer_type VARCHAR(30) NOT NULL DEFAULT 'text',
+    display_order INTEGER NOT NULL,
+    is_required BOOLEAN NOT NULL DEFAULT FALSE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_questions_section_order
+        UNIQUE (section_code, display_order),
+
+    CONSTRAINT ck_questions_answer_type
+        CHECK (answer_type IN (
+            'text',
+            'long_text',
+            'number',
+            'boolean',
+            'date',
+            'json'
+        ))
+);
+
+-- 3. RESPUESTAS DE CONFIGURACIÓN POR EMPRESA
+-- Almacena las respuestas a preguntas fijas
+-- y las preguntas/respuestas de profundización.
+CREATE TABLE IF NOT EXISTS answers_t (
+    answer_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    company_id BIGINT NOT NULL,
+    question_id BIGINT,
+    parent_answer_id BIGINT,
+    question_text TEXT,
+    answer_text TEXT NOT NULL,
+    answer_source VARCHAR(30) NOT NULL DEFAULT 'fixed',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_answers_company
+        FOREIGN KEY (company_id)
+        REFERENCES companies_t(company_id),
+
+    CONSTRAINT fk_answers_question
+        FOREIGN KEY (question_id)
+        REFERENCES questions_t(question_id),
+
+    CONSTRAINT fk_answers_parent
+        FOREIGN KEY (parent_answer_id)
+        REFERENCES answers_t(answer_id),
+
+    CONSTRAINT ck_answers_source
+        CHECK (answer_source IN (
+            'fixed',
+            'ai_followup',
+            'manual'
+        ))
+);
+
+-- 4. CLIENTES COMERCIALES DE CADA EMPRESA
+CREATE TABLE IF NOT EXISTS company_customers_t (
+    customer_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    company_id BIGINT NOT NULL,
+    customer_name VARCHAR(200) NOT NULL,
+    industry VARCHAR(150),
+    company_size VARCHAR(100),
+    location VARCHAR(200),
+    employee_count INTEGER,
+    annual_revenue NUMERIC(18,2),
+    annual_volume NUMERIC(18,2),
+    currency_code CHAR(3) DEFAULT 'MXN',
+    contact_role VARCHAR(150),
+    products_purchased TEXT,
+    purchase_history TEXT,
+    known_problems TEXT,
+    competitors TEXT,
+    objections TEXT,
+    decision_time_days INTEGER,
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+
+    CONSTRAINT fk_company_customers_company
+        FOREIGN KEY (company_id)
+        REFERENCES companies_t(company_id),
+
+    CONSTRAINT ck_customer_employee_count
+        CHECK (employee_count IS NULL OR employee_count >= 0),
+
+    CONSTRAINT ck_customer_decision_time
+        CHECK (decision_time_days IS NULL OR decision_time_days >= 0)
+);
+
+-- =====================================================
+-- ÍNDICES PARA CONSULTAS FRECUENTES
+-- =====================================================
+
+CREATE INDEX IF NOT EXISTS idx_answers_company
+    ON answers_t(company_id);
+
+CREATE INDEX IF NOT EXISTS idx_answers_question
+    ON answers_t(question_id);
+
+CREATE INDEX IF NOT EXISTS idx_answers_parent
+    ON answers_t(parent_answer_id);
+
+CREATE INDEX IF NOT EXISTS idx_customers_company
+    ON company_customers_t(company_id);
+
+CREATE INDEX IF NOT EXISTS idx_questions_section
+    ON questions_t(section_code, display_order);
+
+-- =====================================================
+-- FIN DEL SCRIPT
+-- =====================================================
 

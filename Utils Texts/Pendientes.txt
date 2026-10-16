@@ -17,10 +17,8 @@ pgdump -U postgres -d postgres -F c -f .\database\backups\tsi_backup.dump
 pgdump -U postgres -d postgres --schema-only -f .\database\schema.sql
 
 
-
-
 Y más adelante podríamos agregar:
-
+--- control de usuarios ---
 activar/desactivar usuarios
 cambiar password
 recuperar password
@@ -29,3 +27,8 @@ controlar sesiones
 asociar vendedores a empresas
 permisos por perfil
 métricas por vendedor
+
+
+
+Probar event_t cuando la implementemos.
+Mantener desarrollo local + Vercel como demo.

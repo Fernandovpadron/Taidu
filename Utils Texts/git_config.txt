@@ -43,3 +43,8 @@ git diff --cached --stat
 git config --global user.name "Fernando Villanueva"
 git config --global user.email "villanueva.fernando@outlook.com"
 git commit -m "Initial commit - Taidu Selling Intelligence"
+
+git remote add origin https://github.com/Fernandovpadron/Taidu.git
+git remote -v
+git config --global credential.helper manager
+git push -u origin main

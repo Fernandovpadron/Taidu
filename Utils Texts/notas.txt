@@ -1,3 +1,16 @@
+
+https://github.com/
+Fernandovpadron
+
+https://github.com/Fernandovpadron/Taidu
+
+https://taidu.onrender.com
+-------------------------------------------------------------
+        R E N D E R
+https://dashboard.render.com/login?next=%2F%3Futm_source%3Dchatgpt.com
+fernando.v.padron@outlook.com
+Renderciembre12!
+-------------------------------------------------------------
 Ambiente:
 cd C:\DEV\SalesAI
 .\.venv\Scripts\Activate.ps1
@@ -8,17 +21,17 @@ python app.py
 
 http://127.0.0.1:5000
 
-javier.aguilera@taidu.com
+javier.aguilera@taidu.com Taidu123
 javier.taidu@taidu.com
+admin.taidu@taidu.com
 
+postgresql://taidu_user:4rV0dVs9hcS0jBd4KJ8t4b3ofd7ezbCU@dpg-davvjo7avr4c73dj5tt0-a/taidu
 
 -----------------------------------------------------
---------------- historico instalacion ---------------
+--------------- Historico Instalacion ---------------
 -----------------------------------------------------
 
-primero VC++
- postgress
-luego python
+Instalar VC++ / postgress / python / DBeaver
 
 mkdir C:\DEV
 cd C:\DEV...
