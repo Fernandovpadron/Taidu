@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, jsonify
 
 from intelligence.conversation import procesar_identificacion
@@ -16,7 +15,15 @@ def index():
 @app.route("/answer", methods=["POST"])
 def answer():
     data = request.get_json(silent=True) or {}
+    id_usuario = data.get("id_usuario")
+    question_id = data.get("question_id")
     respuesta = data.get("respuesta", "").strip()
+
+    if not id_usuario or not question_id:
+        return jsonify({
+            "ok": False,
+            "mensaje": "Falta identificar al usuario o la pregunta."
+        }), 400
 
     if not respuesta:
         return jsonify({
@@ -24,12 +31,232 @@ def answer():
             "mensaje": "Por favor escribe una respuesta."
         }), 400
 
-    # Temporalmente devuelve la respuesta.
-    # Después conectaremos aquí las preguntas y respuestas A-H.
-    return jsonify({
-        "ok": True,
-        "respuesta": respuesta
-    })
+    try:
+        with obtener_conexion() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT u.company_id, p.nombre
+                    FROM users_t u
+                    INNER JOIN profiles_t p ON p.id = u.profile_id
+                    WHERE u.id = %s
+                    """,
+                    (id_usuario,)
+                )
+                usuario = cur.fetchone()
+
+                if not usuario:
+                    return jsonify({
+                        "ok": False,
+                        "mensaje": "No se encontró el usuario."
+                    }), 404
+
+                company_id, perfil = usuario
+
+                if perfil != "director_comercial":
+                    return jsonify({
+                        "ok": False,
+                        "mensaje": "Este flujo está disponible solo para Directores Comerciales."
+                    }), 403
+
+                if company_id is None:
+                    return jsonify({
+                        "ok": False,
+                        "mensaje": "Primero debes configurar tu empresa."
+                    }), 400
+
+                cur.execute(
+                    """
+                    SELECT question_text
+                    FROM questions_t
+                    WHERE question_id = %s AND is_active = TRUE
+                    """,
+                    (question_id,)
+                )
+                pregunta = cur.fetchone()
+
+                if not pregunta:
+                    return jsonify({
+                        "ok": False,
+                        "mensaje": "La pregunta no existe o está inactiva."
+                    }), 404
+
+                # Actualiza la respuesta si ya existía; así evitamos duplicarla
+                # si el usuario vuelve a contestar una pregunta pendiente.
+                cur.execute(
+                    """
+                    SELECT answer_id
+                    FROM answers_t
+                    WHERE company_id = %s
+                      AND question_id = %s
+                      AND answer_source = 'fixed'
+                    ORDER BY answer_id DESC
+                    LIMIT 1
+                    """,
+                    (company_id, question_id)
+                )
+                respuesta_existente = cur.fetchone()
+
+                if respuesta_existente:
+                    cur.execute(
+                        """
+                        UPDATE answers_t
+                        SET answer_text = %s,
+                            question_text = %s,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE answer_id = %s
+                        """,
+                        (respuesta, pregunta[0], respuesta_existente[0])
+                    )
+                else:
+                    cur.execute(
+                        """
+                        INSERT INTO answers_t (
+                            company_id,
+                            question_id,
+                            question_text,
+                            answer_text,
+                            answer_source
+                        )
+                        VALUES (%s, %s, %s, %s, 'fixed')
+                        """,
+                        (company_id, question_id, pregunta[0], respuesta)
+                    )
+
+        return jsonify({
+            "ok": True,
+            "mensaje": "Respuesta guardada correctamente."
+        })
+
+    except Exception:
+        app.logger.exception("Error al guardar respuesta")
+        return jsonify({
+            "ok": False,
+            "mensaje": "Ocurrió un error al guardar tu respuesta."
+        }), 500
+
+
+@app.route("/questions/next", methods=["POST"])
+def siguiente_pregunta():
+    data = request.get_json(silent=True) or {}
+    id_usuario = data.get("id_usuario")
+
+    if not id_usuario:
+        return jsonify({
+            "ok": False,
+            "mensaje": "Falta identificar al usuario."
+        }), 400
+
+    try:
+        with obtener_conexion() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT u.company_id, p.nombre
+                    FROM users_t u
+                    INNER JOIN profiles_t p ON p.id = u.profile_id
+                    WHERE u.id = %s
+                    """,
+                    (id_usuario,)
+                )
+                usuario = cur.fetchone()
+
+                if not usuario:
+                    return jsonify({
+                        "ok": False,
+                        "mensaje": "No se encontró el usuario."
+                    }), 404
+
+                company_id, perfil = usuario
+
+                if perfil != "director_comercial":
+                    return jsonify({
+                        "ok": False,
+                        "mensaje": "Este flujo está disponible solo para Directores Comerciales."
+                    }), 403
+
+                if company_id is None:
+                    return jsonify({
+                        "ok": False,
+                        "mensaje": "Primero debes configurar tu empresa."
+                    }), 400
+
+                cur.execute(
+                    """
+                    SELECT COUNT(*)
+                    FROM questions_t
+                    WHERE is_active = TRUE
+                    """
+                )
+                total_preguntas = cur.fetchone()[0]
+
+                cur.execute(
+                    """
+                    SELECT COUNT(DISTINCT question_id)
+                    FROM answers_t
+                    WHERE company_id = %s
+                      AND answer_source = 'fixed'
+                      AND question_id IS NOT NULL
+                    """,
+                    (company_id,)
+                )
+                respondidas = cur.fetchone()[0]
+
+                cur.execute(
+                    """
+                    SELECT
+                        q.question_id,
+                        q.section_code,
+                        q.section_name,
+                        q.question_text,
+                        q.display_order,
+                        q.is_required
+                    FROM questions_t q
+                    WHERE q.is_active = TRUE
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM answers_t a
+                          WHERE a.company_id = %s
+                            AND a.question_id = q.question_id
+                            AND a.answer_source = 'fixed'
+                      )
+                    ORDER BY q.section_code, q.display_order
+                    LIMIT 1
+                    """,
+                    (company_id,)
+                )
+                pregunta = cur.fetchone()
+
+        if not pregunta:
+            return jsonify({
+                "ok": True,
+                "completado": True,
+                "respondidas": respondidas,
+                "total_preguntas": total_preguntas,
+                "mensaje": "La configuración comercial de tu empresa está completa."
+            })
+
+        return jsonify({
+            "ok": True,
+            "completado": False,
+            "respondidas": respondidas,
+            "total_preguntas": total_preguntas,
+            "pregunta": {
+                "question_id": pregunta[0],
+                "section_code": pregunta[1],
+                "section_name": pregunta[2],
+                "question_text": pregunta[3],
+                "display_order": pregunta[4],
+                "is_required": pregunta[5]
+            }
+        })
+
+    except Exception:
+        app.logger.exception("Error al consultar siguiente pregunta")
+        return jsonify({
+            "ok": False,
+            "mensaje": "Ocurrió un error al consultar las preguntas."
+        }), 500
 
 
 @app.route("/identify", methods=["POST"])
