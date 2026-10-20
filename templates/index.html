@@ -177,6 +177,109 @@ async function cargarSiguientePregunta() {
   }
 }
 
+async function guardarRespuestaPregunta(respuesta) {
+    if (!datosUsuario || !datosUsuario.id_usuario || !preguntaActual) {
+        agregarMensajeAI(
+            "No pude identificar la pregunta actual. Volveré a consultar la configuración."
+        );
+        await cargarSiguientePregunta();
+        return;
+    }
+
+    try {
+        const response = await fetch("/answer", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id_usuario: datosUsuario.id_usuario,
+                question_id: preguntaActual.question_id,
+                respuesta: respuesta
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+            agregarMensajeAI(
+                data.mensaje || "No fue posible guardar tu respuesta. Intenta nuevamente."
+            );
+            return;
+        }
+
+        agregarMensajeUsuario(respuesta);
+        input.value = "";
+        preguntaActual = null;
+
+        await cargarSiguientePregunta();
+
+    } catch (error) {
+        console.error("Error al guardar respuesta:", error);
+        agregarMensajeAI(
+            "No fue posible comunicarse con el servidor. Tu respuesta no se confirmó como guardada; puedes intentar enviarla nuevamente."
+        );
+    }
+}
+
+async function cargarSiguientePregunta() {
+    if (!datosUsuario || !datosUsuario.id_usuario) {
+        return;
+    }
+
+    try {
+        const response = await fetch("/questions/next", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id_usuario: datosUsuario.id_usuario
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+            agregarMensajeAI(
+                data.mensaje || "No fue posible cargar la siguiente pregunta."
+            );
+            return;
+        }
+
+        if (data.completado) {
+            preguntaActual = null;
+            etapaConversacion = "configuracion_completa";
+            agregarMensajeAI(
+                "¡Excelente! La configuración comercial de tu empresa está completa.\n\n" +
+                data.respondidas + " de " + data.total_preguntas +
+                " preguntas respondidas."
+            );
+            return;
+        }
+
+        preguntaActual = data.pregunta;
+        etapaConversacion = "preguntas_empresa";
+
+        agregarMensajeAI(
+            "Sección " + preguntaActual.section_code + ": " +
+            preguntaActual.section_name + "\n" +
+            "Pregunta " + (data.respondidas + 1) + " de " +
+            data.total_preguntas + "\n\n" +
+            preguntaActual.question_text
+        );
+
+        input.placeholder = "Escribe tu respuesta...";
+        input.focus();
+
+    } catch (error) {
+        console.error("Error al cargar pregunta:", error);
+        agregarMensajeAI(
+            "No fue posible comunicarse con el servidor para cargar la siguiente pregunta."
+        );
+    }
+}
+
 function agregarMensajeUsuario(texto) {
   const container = document.createElement("div"); container.className = "user-message-container";
   const message = document.createElement("div"); message.className = "message user-message"; message.textContent = texto;
