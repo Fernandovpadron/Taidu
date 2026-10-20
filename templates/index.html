@@ -1,327 +1,199 @@
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taidu Selling Intelligence</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taidu Selling Intelligence</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    #answerInput { box-sizing: border-box; width: 100%; font: inherit; }
+    #answerInput:focus { outline-color: #647ee8; }
+  </style>
 </head>
 <body>
-    <div class="app">
-        <header class="header">
-            <div class="logo">Taidu Selling Intelligence</div>
-            <div class="status">● En línea</div>
-        </header>
-
-        <main class="conversation">
-            <div class="question">
-                <div class="avatar ai-avatar">Taidu</div>
-                <div class="message ai-message">
-                    <div class="message-label">Taidu Selling Intelligence</div>
-                    <div class="message-text">
-                        Para comenzar, ¿cuál es tu correo electrónico?
-                    </div>
-                </div>
-            </div>
-            <div id="messages"></div>
-        </main>
-
-        <footer class="input-area">
-            <div class="input-container">
-                <textarea
-                    id="answerInput"
-                    placeholder="Escribe tu respuesta..."
-                    rows="1"
-                    autofocus
-                ></textarea>
-                <button id="micButton" class="icon-button" title="Responder por voz">🎤</button>
-                <button id="sendButton" class="send-button" title="Enviar">➤</button>
-            </div>
-            <div class="hint">
-                Puedes escribir tu respuesta o utilizar el micrófono.
-            </div>
-        </footer>
-    </div>
-
+  <div class="app">
+    <header class="header">
+      <div class="logo">Taidu Selling Intelligence</div>
+      <div class="status">● En línea</div>
+    </header>
+    <main class="conversation">
+      <div class="question">
+        <div class="avatar ai-avatar">Taidu</div>
+        <div class="message ai-message">
+          <div class="message-label">Taidu Selling Intelligence</div>
+          <div class="message-text">Para comenzar, ¿cuál es tu correo electrónico?</div>
+        </div>
+      </div>
+      <div id="messages"></div>
+    </main>
+    <footer class="input-area">
+      <div class="input-container">
+        <input id="answerInput" type="text" placeholder="Escribe tu correo electrónico..." autocomplete="username" autofocus>
+        <button id="micButton" class="icon-button" title="Responder por voz" type="button">🎤</button>
+        <button id="sendButton" class="send-button" title="Enviar" type="button">➤</button>
+      </div>
+      <div class="hint">Puedes escribir tu respuesta o utilizar el micrófono.</div>
+    </footer>
+  </div>
 <script>
 const input = document.getElementById("answerInput");
 const sendButton = document.getElementById("sendButton");
 const messages = document.getElementById("messages");
 const micButton = document.getElementById("micButton");
-
 let usuarioIdentificado = false;
 let datosUsuario = null;
 let etapaLogin = "email";
 let etapaConversacion = "inicio";
+let preguntaActual = null;
 
 async function enviarRespuesta() {
-    const respuesta = input.value.trim();
-
-    if (!respuesta) {
-        return;
+  const respuesta = input.value.trim();
+  if (!respuesta) return;
+  if (!usuarioIdentificado) {
+    if (etapaLogin === "email") {
+      agregarMensajeUsuario(respuesta);
+      datosUsuario = { email: respuesta };
+      input.value = "";
+      etapaLogin = "password";
+      input.type = "password";
+      input.autocomplete = "current-password";
+      input.placeholder = "Escribe tu contraseña...";
+      agregarMensajeAI("Ahora escribe tu contraseña.");
+      input.focus();
+      return;
     }
-
-    // Inicio de sesión
-    if (!usuarioIdentificado) {
-        if (etapaLogin === "email") {
-            agregarMensajeUsuario(respuesta);
-            input.value = "";
-
-            datosUsuario = { email: respuesta };
-            etapaLogin = "password";
-
-            input.type = "password";
-            input.placeholder = "Escribe tu contraseña...";
-
-            agregarMensajeAI("Ahora escribe tu contraseña.");
-            input.focus();
-            return;
-        }
-
-        if (etapaLogin === "password") {
-            const password = respuesta;
-            input.value = "";
-            await identificarUsuario(datosUsuario.email, password);
-            return;
-        }
+    if (etapaLogin === "password") {
+      input.value = "";
+      await identificarUsuario(datosUsuario.email, respuesta);
+      return;
     }
-
-    // Configuración inicial de la empresa
-    if (etapaConversacion === "nombre_empresa") {
-        agregarMensajeUsuario(respuesta);
-        input.value = "";
-
-        await configurarEmpresa(respuesta);
-        return;
-    }
-
-    // Siguientes pasos, todavía pendientes de implementar
-    agregarMensajeUsuario(respuesta);
-    input.value = "";
-
-    if (etapaConversacion === "preguntas_empresa") {
-        agregarMensajeAI(
-            "Tu empresa ya está asignada. El siguiente paso será continuar con las preguntas de configuración de las secciones A–H."
-        );
-        return;
-    }
-
-    if (datosUsuario && datosUsuario.flujo === "vendedor") {
-        agregarMensajeAI(
-            "Mucho gusto, " + respuesta + ". En el siguiente paso conectaremos tu sesión con la empresa que tienes asignada."
-        );
-        return;
-    }
-
-    if (datosUsuario && datosUsuario.flujo === "administrador") {
-        agregarMensajeAI(
-            "Gracias. Las funciones de administración se implementarán en el siguiente paso."
-        );
-        return;
-    }
-
-    agregarMensajeAI(
-        "La siguiente etapa de la conversación todavía está pendiente de configurar."
-    );
+  }
+  if (etapaConversacion === "nombre_empresa") {
+    agregarMensajeUsuario(respuesta); input.value = ""; await configurarEmpresa(respuesta); return;
+  }
+  if (etapaConversacion === "preguntas_empresa") {
+    await guardarRespuestaPregunta(respuesta); return;
+  }
+  agregarMensajeUsuario(respuesta); input.value = "";
+  if (datosUsuario && datosUsuario.flujo === "vendedor") {
+    agregarMensajeAI("Mucho gusto, " + respuesta + ". En el siguiente paso conectaremos tu sesión con la empresa que tienes asignada.");
+  } else {
+    agregarMensajeAI("La siguiente etapa de la conversación todavía está pendiente de configurar.");
+  }
 }
 
 async function identificarUsuario(email, password) {
-    try {
-        const response = await fetch("/identify", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                email: email,
-                password: password
-            })
-        });
-
-        const data = await response.json();
-        console.log("Autenticación:", data);
-
-        if (!response.ok || !data.ok) {
-            agregarMensajeAI(data.mensaje || "No fue posible iniciar sesión.");
-
-            etapaLogin = "password";
-            input.type = "password";
-            input.placeholder = "Escribe tu contraseña...";
-            input.focus();
-            return;
-        }
-
-        usuarioIdentificado = true;
-        datosUsuario = data;
-
-        input.type = "text";
-        input.placeholder = "Escribe tu respuesta...";
-
-        console.log("Usuario identificado:", datosUsuario.usuario);
-        console.log("Perfil:", datosUsuario.perfil);
-        console.log("Empresa:", datosUsuario.company_id);
-
-        if (data.flujo === "vendedor") {
-            etapaConversacion = "inicio";
-            agregarMensajeAI(
-                "¡Hola! Soy tu comprador.\n\n¿Cómo debo llamarte?"
-            );
-
-        } else if (data.flujo === "director_comercial") {
-            if (data.requiere_configurar_empresa) {
-                etapaConversacion = "nombre_empresa";
-
-                agregarMensajeAI(
-                    "¡Bienvenido!\n\n" +
-                    "Comencemos a configurar tu empresa.\n\n" +
-                    "¿Cuál es el nombre de tu empresa?"
-                );
-            } else {
-                etapaConversacion = "preguntas_empresa";
-
-                agregarMensajeAI(
-                    "¡Bienvenido de nuevo!\n\n" +
-                    "Tu empresa ya está asignada. " +
-                    "Continuaremos con su configuración."
-                );
-            }
-
-        } else if (data.flujo === "administrador") {
-            etapaConversacion = "inicio";
-            agregarMensajeAI(
-                "Bienvenido. ¿Qué deseas administrar?"
-            );
-
-        } else {
-            agregarMensajeAI(
-                "Tu perfil fue identificado, pero todavía no tiene un flujo configurado."
-            );
-        }
-
-    } catch (error) {
-        console.error("Error de autenticación:", error);
-        agregarMensajeAI(
-            "No fue posible comunicarse con el servidor."
-        );
+  try {
+    const response = await fetch("/identify", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await response.json();
+    if (!response.ok || !data.ok) {
+      agregarMensajeAI(data.mensaje || "No fue posible iniciar sesión.");
+      etapaLogin = "password"; input.type = "password"; input.placeholder = "Escribe tu contraseña..."; input.focus(); return;
     }
+    usuarioIdentificado = true; datosUsuario = data;
+    if (data.flujo === "administrador") {
+      agregarMensajeAI("Bienvenido. Abriendo el panel de administración...");
+      window.location.href = "/admin";
+      return;
+    }
+    input.type = "text"; input.autocomplete = "off"; input.placeholder = "Escribe tu respuesta...";
+    if (data.flujo === "vendedor") {
+      etapaConversacion = "inicio";
+      agregarMensajeAI("¡Hola! Soy tu comprador.\n\n¿Cómo debo llamarte?");
+    } else if (data.flujo === "director_comercial") {
+      if (data.requiere_configurar_empresa) {
+        etapaConversacion = "nombre_empresa";
+        agregarMensajeAI("¡Bienvenido!\n\nComencemos a configurar tu empresa.\n\n¿Cuál es el nombre de tu empresa?");
+      } else {
+        etapaConversacion = "preguntas_empresa";
+        agregarMensajeAI("¡Bienvenido de nuevo!\n\nTu empresa ya está asignada. Continuaremos con su configuración.");
+        await cargarSiguientePregunta();
+      }
+    } else {
+      agregarMensajeAI("Tu perfil fue identificado, pero todavía no tiene un flujo configurado.");
+    }
+  } catch (error) {
+    console.error("Error de autenticación:", error);
+    agregarMensajeAI("No fue posible comunicarse con el servidor.");
+  }
 }
 
 async function configurarEmpresa(companyName) {
-    if (!datosUsuario || !datosUsuario.id_usuario) {
-        agregarMensajeAI(
-            "No se encontró la información de tu sesión. Cierra la sesión e inténtalo nuevamente."
-        );
-        return;
+  try {
+    const response = await fetch("/company", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ company_name: companyName })
+    });
+    const data = await response.json();
+    if (!response.ok || !data.ok) { agregarMensajeAI(data.mensaje || "No fue posible guardar la empresa."); return; }
+    datosUsuario.company_id = data.company_id;
+    datosUsuario.company_name = data.company_name;
+    datosUsuario.requiere_configurar_empresa = false;
+    etapaConversacion = "preguntas_empresa";
+    agregarMensajeAI("¡Excelente! La empresa \"" + data.company_name + "\" quedó asignada a tu usuario.\n\nA continuación prepararemos las preguntas para configurar la información comercial de tu empresa.");
+    await cargarSiguientePregunta();
+  } catch (error) {
+    console.error("Error al configurar empresa:", error);
+    agregarMensajeAI("No fue posible comunicarse con el servidor. Intenta nuevamente.");
+  }
+}
+
+async function guardarRespuestaPregunta(respuesta) {
+  if (!preguntaActual) { agregarMensajeAI("No pude identificar la pregunta actual. Volveré a consultar la configuración."); await cargarSiguientePregunta(); return; }
+  try {
+    const response = await fetch("/answer", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question_id: preguntaActual.question_id, respuesta })
+    });
+    const data = await response.json();
+    if (!response.ok || !data.ok) { agregarMensajeAI(data.mensaje || "No fue posible guardar tu respuesta. Intenta nuevamente."); return; }
+    agregarMensajeUsuario(respuesta); input.value = ""; preguntaActual = null; await cargarSiguientePregunta();
+  } catch (error) {
+    console.error("Error al guardar respuesta:", error);
+    agregarMensajeAI("No fue posible comunicarse con el servidor. Tu respuesta no se confirmó como guardada; puedes intentar enviarla nuevamente.");
+  }
+}
+
+async function cargarSiguientePregunta() {
+  try {
+    const response = await fetch("/questions/next", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({})
+    });
+    const data = await response.json();
+    if (!response.ok || !data.ok) { agregarMensajeAI(data.mensaje || "No fue posible cargar la siguiente pregunta."); return; }
+    if (data.completado) {
+      preguntaActual = null; etapaConversacion = "configuracion_completa";
+      agregarMensajeAI("¡Excelente! La configuración comercial de tu empresa está completa.\n\n" + data.respondidas + " de " + data.total_preguntas + " preguntas respondidas."); return;
     }
-
-    try {
-        const response = await fetch("/company", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                id_usuario: datosUsuario.id_usuario,
-                company_name: companyName
-            })
-        });
-
-        const data = await response.json();
-        console.log("Configuración de empresa:", data);
-
-        if (!response.ok || !data.ok) {
-            agregarMensajeAI(
-                data.mensaje || "No fue posible guardar la empresa."
-            );
-            return;
-        }
-
-        // Actualizar los datos de la sesión en el navegador
-        datosUsuario.company_id = data.company_id;
-        datosUsuario.company_name = data.company_name;
-        datosUsuario.requiere_configurar_empresa = false;
-
-        etapaConversacion = "preguntas_empresa";
-
-        agregarMensajeAI(
-            "¡Excelente! La empresa \"" +
-            data.company_name +
-            "\" quedó asignada a tu usuario.\n\n" +
-            "A continuación prepararemos las preguntas para configurar la información comercial de tu empresa."
-        );
-
-    } catch (error) {
-        console.error("Error al configurar empresa:", error);
-        agregarMensajeAI(
-            "No fue posible comunicarse con el servidor. Intenta nuevamente."
-        );
-    }
+    preguntaActual = data.pregunta; etapaConversacion = "preguntas_empresa";
+    agregarMensajeAI("Sección " + preguntaActual.section_code + ": " + preguntaActual.section_name + "\nPregunta " + (data.respondidas + 1) + " de " + data.total_preguntas + "\n\n" + preguntaActual.question_text);
+    input.placeholder = "Escribe tu respuesta..."; input.focus();
+  } catch (error) {
+    console.error("Error al cargar pregunta:", error);
+    agregarMensajeAI("No fue posible comunicarse con el servidor para cargar la siguiente pregunta.");
+  }
 }
 
 function agregarMensajeUsuario(texto) {
-    const container = document.createElement("div");
-    container.className = "user-message-container";
-
-    const message = document.createElement("div");
-    message.className = "message user-message";
-    message.textContent = texto;
-
-    container.appendChild(message);
-    messages.appendChild(container);
-
-    scrollBottom();
+  const container = document.createElement("div"); container.className = "user-message-container";
+  const message = document.createElement("div"); message.className = "message user-message"; message.textContent = texto;
+  container.appendChild(message); messages.appendChild(container); scrollBottom();
 }
-
 function agregarMensajeAI(texto) {
-    const container = document.createElement("div");
-    container.className = "question";
-
-    const avatar = document.createElement("div");
-    avatar.className = "avatar ai-avatar";
-    avatar.textContent = "Taidu";
-
-    const message = document.createElement("div");
-    message.className = "message ai-message";
-
-    const label = document.createElement("div");
-    label.className = "message-label";
-    label.textContent = "Taidu Selling Intelligence";
-
-    const text = document.createElement("div");
-    text.className = "message-text";
-    text.textContent = texto;
-
-    message.appendChild(label);
-    message.appendChild(text);
-
-    container.appendChild(avatar);
-    container.appendChild(message);
-
-    messages.appendChild(container);
-    scrollBottom();
+  const container = document.createElement("div"); container.className = "question";
+  const avatar = document.createElement("div"); avatar.className = "avatar ai-avatar"; avatar.textContent = "Taidu";
+  const message = document.createElement("div"); message.className = "message ai-message";
+  const label = document.createElement("div"); label.className = "message-label"; label.textContent = "Taidu Selling Intelligence";
+  const text = document.createElement("div"); text.className = "message-text"; text.textContent = texto;
+  message.append(label, text); container.append(avatar, message); messages.appendChild(container); scrollBottom();
 }
-
-input.addEventListener("keydown", function(event) {
-    if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        enviarRespuesta();
-    }
-});
-
+function scrollBottom() { window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); }
+input.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); enviarRespuesta(); } });
 sendButton.addEventListener("click", enviarRespuesta);
-
-micButton.addEventListener("click", function() {
-    alert("El micrófono lo conectaremos en el siguiente paso con faster-whisper.");
-});
-
-function scrollBottom() {
-    window.scrollTo({
-        top: document.body.scrollHeight,
-        behavior: "smooth"
-    });
-}
+micButton.addEventListener("click", () => alert("El micrófono lo conectaremos en el siguiente paso con faster-whisper."));
 </script>
 </body>
 </html>
-```

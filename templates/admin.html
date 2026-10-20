@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Administración | Taidu Selling Intelligence</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#1f2937;background:#f5f7fb}*{box-sizing:border-box}body{margin:0}header{background:#172554;color:#fff;padding:1.2rem max(1rem,calc((100% - 1100px)/2))}h1{margin:0;font-size:1.3rem}main{max-width:1100px;margin:1.5rem auto;padding:0 1rem 2rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}section{background:#fff;padding:1.2rem;border-radius:12px;box-shadow:0 2px 12px #14213d0d;margin-bottom:1rem}h2{font-size:1.08rem;margin-top:0}label{display:block;font-size:.9rem;margin:.8rem 0 .3rem;font-weight:600}input,select{width:100%;padding:.65rem;border:1px solid #cbd5e1;border-radius:7px;font:inherit}button{margin-top:1rem;border:0;background:#1d4ed8;color:#fff;padding:.65rem .9rem;border-radius:7px;cursor:pointer;font:inherit}button.danger{background:#b91c1c;margin:0;padding:.4rem .6rem}.hint{color:#64748b;font-size:.88rem}#notice{margin:1rem 0;padding:.8rem;border-radius:8px;display:none}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:.7rem .5rem;text-align:left;border-bottom:1px solid #e2e8f0}th{color:#475569}
+  </style>
+</head>
+<body>
+<header><h1>Taidu Selling Intelligence · Administración</h1></header>
+<main>
+  <p><a href="/">← Volver a Taidu</a> · <button id="logout" class="secondary" type="button">Cerrar sesión</button></p>
+  <div id="notice" role="status" aria-live="polite"></div>
+  <div class="grid">
+    <section><h2>Crear empresa</h2><form id="company-form">
+      <label for="company-name">Nombre de la empresa *</label><input id="company-name" maxlength="200" required>
+      <label for="industry">Industria (opcional)</label><input id="industry" maxlength="150" placeholder="Ej. Automotriz">
+      <button type="submit">Crear empresa</button>
+    </form></section>
+    <section><h2>Crear usuario</h2><form id="user-form">
+      <label for="username">Nombre de usuario *</label><input id="username" maxlength="100" required>
+      <label for="email">Correo electrónico *</label><input id="email" type="email" maxlength="254" required>
+      <label for="password">Contraseña inicial (mínimo 12 caracteres) *</label><input id="password" type="password" minlength="12" autocomplete="new-password" required>
+      <label for="profile">Perfil *</label><select id="profile" required><option value="director_comercial">Director comercial</option><option value="vendedor">Vendedor</option></select>
+      <label for="user-company">Empresa</label><select id="user-company"><option value="">Sin empresa (solo director comercial)</option></select>
+      <p id="company-hint" class="hint">El vendedor debe tener una empresa activa asignada.</p>
+      <button type="submit">Crear usuario</button>
+    </form></section>
+  </div>
+  <section><h2>Empresas activas</h2><div class="table-wrap"><table><thead><tr><th>Empresa</th><th>Industria</th><th>Acción</th></tr></thead><tbody id="companies-body"></tbody></table></div></section>
+  <section><h2>Usuarios</h2><div class="table-wrap"><table><thead><tr><th>Usuario</th><th>Correo</th><th>Perfil</th><th>Empresa</th><th>Acción</th></tr></thead><tbody id="users-body"></tbody></table></div></section>
+</main>
+<script>
+const notice=document.getElementById('notice'), profileSelect=document.getElementById('profile'), companySelect=document.getElementById('user-company');let companies=[];
+function showNotice(message,error=false){notice.textContent=message;notice.style.display='block';notice.style.background=error?'#fee2e2':'#dcfce7'}
+async function api(url,options={}){const response=await fetch(url,{credentials:'same-origin',headers:{'Content-Type':'application/json',...(options.headers||{})},...options});const data=await response.json().catch(()=>({}));if(!response.ok||data.ok===false)throw new Error(data.mensaje||`Error HTTP ${response.status}`);return data}
+function updateCompanyRequirement(){const seller=profileSelect.value==='vendedor';companySelect.required=seller;companySelect.options[0].disabled=seller;if(seller&&!companySelect.value&&companies.length)companySelect.value=String(companies[0].company_id)}
+profileSelect.addEventListener('change',updateCompanyRequirement);
+async function refresh(){const data=await api('/admin/api/overview');companies=data.empresas||[];const selected=companySelect.value;companySelect.replaceChildren();const empty=document.createElement('option');empty.value='';empty.textContent='Sin empresa (solo director comercial)';companySelect.append(empty);for(const c of companies){const o=document.createElement('option');o.value=String(c.company_id);o.textContent=c.company_name;companySelect.append(o)}if(selected&&companies.some(c=>String(c.company_id)===selected))companySelect.value=selected;
+const cb=document.getElementById('companies-body');cb.replaceChildren();for(const c of companies){const tr=document.createElement('tr');for(const value of [c.company_name,c.industry||'—']){const td=document.createElement('td');td.textContent=value;tr.append(td)}const td=document.createElement('td'),b=document.createElement('button');b.className='danger';b.textContent='Desactivar';b.addEventListener('click',async()=>{if(!confirm(`¿Desactivar la empresa "${c.company_name}"?`))return;try{await api(`/admin/api/companies/${c.company_id}`,{method:'DELETE'});showNotice('Empresa desactivada.');await refresh()}catch(e){showNotice(e.message,true)}});td.append(b);tr.append(td);cb.append(tr)}
+const ub=document.getElementById('users-body');ub.replaceChildren();for(const u of data.usuarios||[]){const tr=document.createElement('tr');for(const value of [u.username,u.email,u.perfil,u.company_name||'—']){const td=document.createElement('td');td.textContent=value;tr.append(td)}const td=document.createElement('td'),b=document.createElement('button');b.className='danger';b.textContent='Eliminar';b.addEventListener('click',async()=>{if(!confirm(`¿Eliminar al usuario "${u.email}"? Esta acción no se puede deshacer.`))return;try{await api(`/admin/api/users/${u.id}`,{method:'DELETE'});showNotice('Usuario eliminado.');await refresh()}catch(e){showNotice(e.message,true)}});td.append(b);tr.append(td);ub.append(tr)}updateCompanyRequirement()}
+
+document.getElementById('company-form').addEventListener('submit',async e=>{e.preventDefault();try{await api('/admin/api/companies',{method:'POST',body:JSON.stringify({company_name:document.getElementById('company-name').value,industry:document.getElementById('industry').value})});e.target.reset();showNotice('Empresa creada correctamente.');await refresh()}catch(error){showNotice(error.message,true)}});
+document.getElementById('user-form').addEventListener('submit',async e=>{e.preventDefault();const perfil=profileSelect.value,company_id=companySelect.value||null;if(perfil==='vendedor'&&!company_id){showNotice('Selecciona una empresa para el vendedor.',true);return}try{await api('/admin/api/users',{method:'POST',body:JSON.stringify({username:document.getElementById('username').value,email:document.getElementById('email').value,password:document.getElementById('password').value,perfil,company_id})});e.target.reset();profileSelect.value='director_comercial';showNotice('Usuario creado correctamente.');await refresh()}catch(error){showNotice(error.message,true)}});
+document.getElementById('logout').addEventListener('click',async()=>{try{await api('/logout',{method:'POST',body:JSON.stringify({})});window.location.href='/'}catch(error){showNotice(error.message,true)}});
+refresh().catch(error=>showNotice(error.message+' Si tu sesión ya no está activa, vuelve a iniciar sesión.',true));
+</script>
+</body>
+</html>
