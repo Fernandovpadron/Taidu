@@ -23,7 +23,7 @@ http://127.0.0.1:5000
 
 javier.aguilera@taidu.com Taidu123
 javier.taidu@taidu.com
-admin.taidu@taidu.com
+admin.taidu@taidu.com  
 
 postgresql://taidu_user:4rV0dVs9hcS0jBd4KJ8t4b3ofd7ezbCU@dpg-davvjo7avr4c73dj5tt0-a/taidu
 
@@ -84,7 +84,17 @@ Get-ScheduledTaskInfo -TaskName "TSI-Backup-PostgreSQL-Render" |
     Select-Object NextRunTime, LastRunTime, LastTaskResult
 ----------------------------------------------------------------------------------------------------------------
 
+reiniciar un servicios postgress "internal"
 
+
+$pgBin = "C:\Program Files\PostgreSQL\18\bin"
+$dataDir = "C:\PostgreSQL\18\tsi_data"
+
+New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
+
+& "$pgBin\initdb.exe" -D $dataDir -U postgres -A scram-sha-256 -W
+
+----------------------------------------------------------------------------------------------------------------
 
 
 
