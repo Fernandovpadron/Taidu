@@ -12,18 +12,18 @@ fernando.v.padron@outlook.com
 Renderciembre12!
 -------------------------------------------------------------
 Ambiente:
-cd C:\DEV\SalesAI
+cd C:\DEV\TSI
 .\.venv\Scripts\Activate.ps1
 
 Ejecutar
-cd C:\DEV\SalesAI
+cd C:\DEV\TSI
 python app.py
 
 http://127.0.0.1:5000
 
 javier.aguilera@taidu.com Taidu123
 javier.taidu@taidu.com
-admin.taidu@taidu.com
+admin.taidu@taidu.com  
 
 postgresql://taidu_user:4rV0dVs9hcS0jBd4KJ8t4b3ofd7ezbCU@dpg-davvjo7avr4c73dj5tt0-a/taidu
 
@@ -37,8 +37,8 @@ mkdir C:\DEV
 cd C:\DEV...
 .\venv\Scripts\Activate.ps1
 
-mkdir C:\DEV\SalesAI\templates\
-mkdir C:\DEV\SalesAI\static
+mkdir C:\DEV\TSI\templates\
+mkdir C:\DEV\TSI\static
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 py -c "import sys; print(sys.executable)"
 C:\Users\ferna\AppData\Local\Programs\Python\Python314\python.exe
@@ -53,7 +53,7 @@ PS C:\WINDOWS\System32> [Environment]::SetEnvironmentVariable(
 >> )
 --------------------------------------------------------
   Para activar el environment x 1ra vez
-cd C:\DEV\SalesAI
+cd C:\DEV\TSI
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
@@ -69,8 +69,32 @@ python -m pip freeze > requirements.txt
 
 
 
+postgresql://taidu_user:iT0VlkxYorZZmiEX0uDgJ2ABZAQYwK8i@dpg-dbc3vhgn74is73fa0jvg-a.oregon-postgres.render.com/taidu_1e9u
+
+----------------------------------------------------------------------------------------------------------------
+Schedule de respaldos:
+
+como cambiar la hora:
+
+$Tarea = "TSI-Backup-PostgreSQL-Render"
+$Disparador = New-ScheduledTaskTrigger -Daily -At 10:00AM
+Set-ScheduledTask -TaskName $Tarea -Trigger $Disparador
+
+Get-ScheduledTaskInfo -TaskName "TSI-Backup-PostgreSQL-Render" |
+    Select-Object NextRunTime, LastRunTime, LastTaskResult
+----------------------------------------------------------------------------------------------------------------
+
+reiniciar un servicios postgress "internal"
 
 
+$pgBin = "C:\Program Files\PostgreSQL\18\bin"
+$dataDir = "C:\PostgreSQL\18\tsi_data"
+
+New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
+
+& "$pgBin\initdb.exe" -D $dataDir -U postgres -A scram-sha-256 -W
+
+----------------------------------------------------------------------------------------------------------------
 
 
 
