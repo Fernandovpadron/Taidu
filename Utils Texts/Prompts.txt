@@ -70,3 +70,12 @@ Si consideras que mi estructura actual no es adecuada para una nueva funcionalid
 Prioriza siempre:
 
 **claridad → modularidad → reutilización → mantenibilidad → simplicidad.**
+
+
+Decisiones acordadas 21 octubre 2026
+1. Creación de usuarios: podrán crearse con o sin empresa asignada.
+2. Vendedores: podrán quedar pendientes de asignación.
+3. Simulaciones: únicamente permitidas cuando el vendedor tenga una empresa activa asignada.
+4. Seguridad: Flask validará los permisos y la empresa en el servidor.
+5. Desasignación: conserva el historial, pero bloquea nuevas simulaciones.
+6. Empresas: podremos editar su nombre e industria, desactivarlas y eliminarlas únicamente bajo las reglas de protección acordadas.
